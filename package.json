@@ -1,0 +1,24 @@
+{
+  "name": "12-mysql",
+  "version": "1.0.0",
+  "description": "mysql homework",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MattGohr/MySQL.git"
+  },
+  "keywords": [
+    "bamazon",
+    "matt",
+    "gohr"
+  ],
+  "author": "matt gohr",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MattGohr/MySQL/issues"
+  },
+  "homepage": "https://github.com/MattGohr/MySQL#readme"
+}
