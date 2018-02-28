@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/MattGohr/MySQL/issues"
   },
-  "homepage": "https://github.com/MattGohr/MySQL#readme"
+  "homepage": "https://github.com/MattGohr/MySQL#readme",
+  "dependencies": {
+    "inquirer": "^5.1.0",
+    "mysql": "^2.15.0"
+  }
 }

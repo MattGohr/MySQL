@@ -21,6 +21,7 @@ CREATE TABLE products (
   PRIMARY KEY (id)
 );
 
+
 -- Creates new rows containing data in all named columns --
 INSERT INTO products (product_name, department_name, price, stock_quantity)
 VALUES ("toilet paper", "bathroom", 300, 100);
