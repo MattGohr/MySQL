@@ -1,5 +1,10 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require("cli-table");
+
+var table = new Table({
+  head: ['ID', 'Name', 'Price', 'Quantity']
+});
 
 // create the connection information for the sql database
 var connection = mysql.createConnection({
@@ -10,19 +15,68 @@ var connection = mysql.createConnection({
   database: "bamazon"
 });
 
-//3306
-
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
   connection.end();
 });
 
+function howMany (id) {
+  inquirer
+  .prompt({
+    name: `quantity`,
+    message: `How Many Would You Like?`,
+    type: `input`
+  }).then(function (input) {
+      var quantity = parseInt(input.quantity);
+      if (isNaN(quantity)) {
+        console.log(`Please enter a number!`);
+        return howMany();
+      }else {
+        checkOut(quantity, id);
+      }
+  })
+}
+
+function checkOut (quantity, id) {
+  connection.query(`SELECT * FROM products`, function(err, results) {
+      if (err) throw err;
+      // once you have the items, prompt the user for which they'd like to bid on
+      console.log(results);
+    });
+}
+
+function firstQuestion () {
+  inquirer
+  .prompt({
+    name: `id`,
+    message: `Please enter the ID of the item you would like to buy?`,
+    type: `input`
+  }).then(function(input) {
+    var id = parseInt(input.id);
+    if (isNaN(id)) {
+      console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
+      return;
+    }
+    else {
+      console.log(`congrats you entered a number`);
+      console.log(howMany());
+    }
+  })
+}
+
 connection.query(`SELECT * FROM products`, function(err, results) {
   if (err) throw err;
   // once you have the items, prompt the user for which they'd like to bid on
-  console.log(`calling tabel`);
-  console.log(results);
+  console.log(`calling inital tabel`);
+
+  for (var i = 0; i < results.length; i++) {
+    table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
+  }
+
+  console.log(table.toString());
+  firstQuestion();
+
 });
 
 // // function which prompts the user for what action they should take
