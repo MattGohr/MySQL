@@ -21,6 +21,34 @@ connection.connect(function(err) {
   console.log("connected as id " + connection.threadId);
 });
 
+connection.query(`SELECT * FROM products`, function(err, results) {
+  if (err) throw err;
+  for (var i = 0; i < results.length; i++) {
+    table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
+  }
+
+  console.log(table.toString());
+  return firstQuestion();
+
+});
+
+function firstQuestion() {
+  inquirer
+    .prompt({
+      name: `id`,
+      message: `Please enter the ID of the item you would like to buy?`,
+      type: `input`
+    }).then(function(input) {
+      id = parseInt(input.id);
+      if (isNaN(id)) {
+        console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
+        return firstQuestion();
+      } else {
+        return askHowMany();
+      }
+    })
+}
+
 function askHowMany() {
   inquirer
     .prompt({
@@ -39,56 +67,25 @@ function askHowMany() {
 }
 
 function checkOut(requestedQuantity) {
-  console.log(`requestedQuantity: ${requestedQuantity}`);
   connection.query(`SELECT * FROM products WHERE id=${id}`, function(err, results) {
     if (err) throw err;
-    // once you have the items, prompt the user for which they'd like to bid on
-    var stockQuantity = results[0].stock_quantity
-    console.log(`geting ready to calculate quantity!`);
+    var stockQuantity = results[0].stock_quantity;
+    var price = results[0].price;
 
     if (requestedQuantity > stockQuantity) {
       console.log(`We don't have that much in stock!!`);
       return askHowMany(id);
     } else {
       console.log(`Transaction Complete!`);
-      return calculateTotal(requestedQuantity);
+      console.log(`Your total is $${price * requestedQuantity}`);
+      return calculateTotal(stockQuantity - requestedQuantity, price);
     }
     connection.end();
   });
 }
 
-function calculateTotal (quantity) {
-  connection.query(`SELECT * `)
+function calculateTotal(newQuantity, price) {
+  connection.query(`UPDATE products SET stock_quantity=${newQuantity} WHERE id=${id}`, function(err, result) {
+    connection.end();
+  })
 }
-
-function firstQuestion() {
-  inquirer
-    .prompt({
-      name: `id`,
-      message: `Please enter the ID of the item you would like to buy?`,
-      type: `input`
-    }).then(function(input) {
-      id = parseInt(input.id);
-      if (isNaN(id)) {
-        console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
-        return;
-      } else {
-        console.log(`congrats you entered a number`);
-        return askHowMany();
-      }
-    })
-}
-
-connection.query(`SELECT * FROM products`, function(err, results) {
-  if (err) throw err;
-  // once you have the items, prompt the user for which they'd like to bid on
-  console.log(`calling inital tabel`);
-
-  for (var i = 0; i < results.length; i++) {
-    table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
-  }
-
-  console.log(table.toString());
-  return firstQuestion();
-
-});
