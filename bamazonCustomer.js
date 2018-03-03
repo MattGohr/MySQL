@@ -1,6 +1,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require("cli-table");
+var id;
 
 var table = new Table({
   head: ['ID', 'Name', 'Price', 'Quantity']
@@ -18,51 +19,59 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
-  connection.end();
 });
 
-function howMany (id) {
+function askHowMany() {
   inquirer
-  .prompt({
-    name: `quantity`,
-    message: `How Many Would You Like?`,
-    type: `input`
-  }).then(function (input) {
+    .prompt({
+      name: `quantity`,
+      message: `How Many Would You Like?`,
+      type: `input`
+    }).then(function(input) {
       var quantity = parseInt(input.quantity);
       if (isNaN(quantity)) {
         console.log(`Please enter a number!`);
-        return howMany();
-      }else {
-        checkOut(quantity, id);
+        return askHowMany();
+      } else {
+        checkOut(quantity);
       }
-  })
+    })
 }
 
-function checkOut (quantity, id) {
-  connection.query(`SELECT * FROM products`, function(err, results) {
-      if (err) throw err;
-      // once you have the items, prompt the user for which they'd like to bid on
-      console.log(results);
-    });
+function checkOut(requestedQuantity) {
+  console.log(`requestedQuantity: ${requestedQuantity}`);
+  connection.query(`SELECT * FROM products WHERE id=${id}`, function(err, results) {
+    if (err) throw err;
+    // once you have the items, prompt the user for which they'd like to bid on
+    var stockQuantity = results[0].stock_quantity
+    console.log(`geting ready to calculate quantity!`);
+
+    if (requestedQuantity > stockQuantity) {
+      console.log(`We don't have that much in stock!!`);
+      return askHowMany(id);
+    }else {
+      console.log(`you didn't fuck this up! congrats!`);
+    }
+    connection.end();
+  });
 }
 
-function firstQuestion () {
+function firstQuestion() {
   inquirer
-  .prompt({
-    name: `id`,
-    message: `Please enter the ID of the item you would like to buy?`,
-    type: `input`
-  }).then(function(input) {
-    var id = parseInt(input.id);
-    if (isNaN(id)) {
-      console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
-      return;
-    }
-    else {
-      console.log(`congrats you entered a number`);
-      console.log(howMany());
-    }
-  })
+    .prompt({
+      name: `id`,
+      message: `Please enter the ID of the item you would like to buy?`,
+      type: `input`
+    }).then(function(input) {
+      id = parseInt(input.id);
+      if (isNaN(id)) {
+        console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
+        return;
+      } else {
+        console.log(`congrats you entered a number`);
+        return askHowMany();
+      }
+    })
 }
 
 connection.query(`SELECT * FROM products`, function(err, results) {
@@ -75,7 +84,7 @@ connection.query(`SELECT * FROM products`, function(err, results) {
   }
 
   console.log(table.toString());
-  firstQuestion();
+  return firstQuestion();
 
 });
 
