@@ -23,9 +23,9 @@ connection.connect(function(err) {
 
 connection.query(`SELECT * FROM products`, function(err, results) {
   if (err) throw err;
-  for (var i = 0; i < results.length; i++) {
-    table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
-  }
+  // for (var i = 0; i < results.length; i++) {
+  //   table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
+  // }
 
   console.log(table.toString());
   return firstQuestion();
@@ -35,19 +35,50 @@ connection.query(`SELECT * FROM products`, function(err, results) {
 function firstQuestion() {
   inquirer
     .prompt({
-      name: `id`,
-      message: `Please enter the ID of the item you would like to buy?`,
-      type: `input`
-    }).then(function(input) {
-      id = parseInt(input.id);
-      if (isNaN(id)) {
-        console.log(`Please provide a number.  You provided a ${typeof(input.id)}!`);
-        return firstQuestion();
-      } else {
-        return askHowMany();
+      name: `answer`,
+      message: `List a set of menu options:`,
+      choices: [`View Products for Sale`, `View Low Inventory`, `Add to Inventory`, `Add New Product`],
+      type: `list`
+    }).then(function(choices) {
+      console.log(choices.answer);
+      switch (choices.answer) {
+        case 'View Products for Sale':
+          viewProducts();
+          break;
+        case 'View Low Inventory':
+          viewLowInv();
+          break;
+        case 'Add to Inventory':
+          addInv();
+          break;
+        case 'Add New Product':
+          addProduct();
+          break;
+        default:
+          console.log(`Please select a valid answer or you're fired!`);
+
       }
     })
 }
+
+
+function addProduct() {
+  //`SELECT * FROM products WHERE id=${id}`
+
+}
+
+function addInv() {
+
+}
+
+function viewLowInv() {
+
+}
+
+function viewProducts() {
+
+}
+
 
 function askHowMany() {
   inquirer
@@ -66,8 +97,8 @@ function askHowMany() {
     })
 }
 
-function checkOut(requestedQuantity) {
-  connection.query(`SELECT * FROM products WHERE id=${id}`, function(err, results) {
+function checkOut(query) {
+  connection.query(, function(err, results) {
     if (err) throw err;
     var stockQuantity = results[0].stock_quantity;
     var price = results[0].price;
