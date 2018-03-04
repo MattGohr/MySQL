@@ -15,8 +15,9 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
+  firstQuestion();
 });
-return firstQuestion();
+
 
 function firstQuestion() {
   inquirer
@@ -86,19 +87,43 @@ function addInv(SQLstatment) {
 
 function addProduct() {
   inquirer
-  .prompt([
-    {
-    name: `newItem`,
-    message: `What would you like to add?`,
-    type: `input`
-  },
-  {
-    name: `quantity`,
-    message: `Quantity:`,
-    type: `input`,
-    
-  }
-  ])
+    .prompt([{
+        name: `newItemName`,
+        message: `What would you like to add?`,
+        type: `input`
+      },
+      {
+        name: `quantity`,
+        message: `Quantity:`,
+        type: `input`
+      },
+      {
+        name: `department`,
+        message: 'Department:',
+        type: `input`
+      },
+      {
+        name: `price`,
+        message: `Price: $`,
+        type: `input`
+      }
+    ]).then(function(results) {
+      if (isNaN(results.price)) {
+        console.log(`Please enter a number for Price! Now let's try this again...`);
+        addProduct();
+
+      } else if (isNaN(results.quantity)) {
+        console.log(`Please enter a number for quantity! Now let's try this again...`);
+        addProduct();
+      } else {
+        connection.query(`INSERT INTO products (product_name, department_name, price, stock_quantity)
+        VALUES ("${results.newItemName}", "${results.department}", ${results.price}, ${results.quantity})`, function(err) {
+          if (err) throw err;
+          console.log(`You entered ${results.newItemName} into the Database! Now dow a little Dance!!`);
+          connection.end();
+        })
+      }
+    })
 }
 
 function query(query) {
