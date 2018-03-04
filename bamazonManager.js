@@ -38,7 +38,7 @@ function firstQuestion() {
           addInv(`SELECT * FROM products`);
           break;
         case 'Add New Product':
-          addProduct(`SELECT * FROM products`);
+          addProduct();
           break;
         default:
           console.log(`Please select a valid answer or you're fired!`);
@@ -85,7 +85,20 @@ function addInv(SQLstatment) {
 }
 
 function addProduct() {
-  query(`SELECT * FROM products`);
+  inquirer
+  .prompt([
+    {
+    name: `newItem`,
+    message: `What would you like to add?`,
+    type: `input`
+  },
+  {
+    name: `quantity`,
+    message: `Quantity:`,
+    type: `input`,
+    
+  }
+  ])
 }
 
 function query(query) {
