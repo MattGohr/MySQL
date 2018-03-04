@@ -4,10 +4,6 @@ var inquirer = require("inquirer");
 var Table = require("cli-table");
 var id;
 
-var table = new Table({
-  head: ['ID', 'Name', 'Price', 'Quantity']
-});
-
 var connection = mysql.createConnection({
   host: process.env.HOST,
   port: process.env.PORT,
@@ -20,17 +16,7 @@ connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
 });
-
-connection.query(`SELECT * FROM products`, function(err, results) {
-  if (err) throw err;
-  // for (var i = 0; i < results.length; i++) {
-  //   table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
-  // }
-
-  console.log(table.toString());
-  return firstQuestion();
-
-});
+return firstQuestion();
 
 function firstQuestion() {
   inquirer
@@ -43,80 +29,77 @@ function firstQuestion() {
       console.log(choices.answer);
       switch (choices.answer) {
         case 'View Products for Sale':
-          viewProducts();
+          query(`SELECT * FROM products`);
           break;
         case 'View Low Inventory':
-          viewLowInv();
+          query(`SELECT * FROM products WHERE stock_quantity<5`);
           break;
         case 'Add to Inventory':
-          addInv();
+          addInv(`SELECT * FROM products`);
           break;
         case 'Add New Product':
-          addProduct();
+          addProduct(`SELECT * FROM products`);
           break;
         default:
           console.log(`Please select a valid answer or you're fired!`);
-
       }
     })
 }
 
-
-function addProduct() {
-  //`SELECT * FROM products WHERE id=${id}`
-
-}
-
-function addInv() {
-
-}
-
-function viewLowInv() {
-
-}
-
-function viewProducts() {
-
-}
-
-
-function askHowMany() {
-  inquirer
-    .prompt({
-      name: `quantity`,
-      message: `How Many Would You Like?`,
-      type: `input`
-    }).then(function(input) {
-      var quantity = parseInt(input.quantity);
-      if (isNaN(quantity)) {
-        console.log(`Please enter a number!`);
-        return askHowMany();
-      } else {
-        checkOut(quantity);
-      }
-    })
-}
-
-function checkOut(query) {
-  connection.query(, function(err, results) {
-    if (err) throw err;
-    var stockQuantity = results[0].stock_quantity;
-    var price = results[0].price;
-
-    if (requestedQuantity > stockQuantity) {
-      console.log(`We don't have that much in stock!!`);
-      return askHowMany(id);
-    } else {
-      console.log(`Transaction Complete!`);
-      console.log(`Your total is $${price * requestedQuantity}`);
-      return calculateTotal(stockQuantity - requestedQuantity, price);
+function addInv(SQLstatment) {
+  var table = new Table({
+    head: ['ID', 'Name', 'Price', 'Quantity']
+  });
+  var allItems = [];
+  connection.query(SQLstatment, function(err, results) {
+    for (var i = 0; i < results.length; i++) {
+      allItems.push(results[i].product_name);
     }
-    connection.end();
+    inquirer
+      .prompt({
+        name: `selected`,
+        message: `Select the item you would like to add`,
+        type: `list`,
+        choices: allItems,
+      }).then(function(item) {
+        inquirer
+          .prompt({
+            name: `ammount`,
+            message: `How many ${item.selected}s would you like to add?`,
+            type: `input`
+          }).then(function(add) {
+            //need to get the ID of the item selected--- LAME
+            connection.query(`SELECT id FROM products WHERE product_name="${item.selected}"`, function(err, result) {
+              if (err) throw err;
+              connection.query(`UPDATE products SET stock_quantity=stock_quantity + ${add.ammount} WHERE id=${result[0].id}`, function(err, result) {
+                if (err) throw err;
+                console.log(`you added ${add.ammount} ${item.selected}s to invintory! You deserve a raise!`);
+                connection.end();
+              });
+            });
+
+          })
+
+      })
   });
 }
 
-function calculateTotal(newQuantity, price) {
-  connection.query(`UPDATE products SET stock_quantity=${newQuantity} WHERE id=${id}`, function(err, result) {
+function addProduct() {
+  query(`SELECT * FROM products`);
+}
+
+function query(query) {
+  var table = new Table({
+    head: ['ID', 'Name', 'Price', 'Quantity']
+  });
+  console.log(`Running Query: ${query}`);
+  connection.query(query, function(err, results) {
+    if (err) throw err;
+    for (var i = 0; i < results.length; i++) {
+      table.push([results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity])
+    }
+    console.log(table.toString());
+    table = [];
     connection.end();
-  })
+  });
 }
